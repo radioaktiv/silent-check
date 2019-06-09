@@ -1,2 +1,1 @@
-prometheus_client
-srvlookup
+prometheus-client==0.7.0

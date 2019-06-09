@@ -8,11 +8,11 @@ set("console.colorize", "auto")
 {{ source.name }} = audio_to_stereo(mksafe(input.http('{{ source.url }}')))
 
 def noise_{{ source.name }}()
-  system('./silent-check-prom.py --noise --source {{ source.name }} --min_noise {{ source.min_noise | d(min_noise_default) }} --max_blank {{ source.max_blank | d(max_blank_default) }} --threshold {{ source.threshold | d(threshold_default) }}')
+  system('{{ silent_check_prom }} --noise --source {{ source.name }} --min_noise {{ source.min_noise | d(min_noise_default) }} --max_blank {{ source.max_blank | d(max_blank_default) }} --threshold {{ source.threshold | d(threshold_default) }}')
 end
 
 def blank_{{ source.name }}()
-  system('./silent-check-prom.py --blank --source {{ source.name }} --min_noise {{ source.min_noise | d(min_noise_default) }} --max_blank {{ source.max_blank | d(max_blank_default) }} --threshold {{ source.threshold | d(threshold_default) }}')
+  system('{{ silent_check_prom }} --blank --source {{ source.name }} --min_noise {{ source.min_noise | d(min_noise_default) }} --max_blank {{ source.max_blank | d(max_blank_default) }} --threshold {{ source.threshold | d(threshold_default) }}')
 end
 
 blank_{{ source.name }}()

@@ -1,5 +1,3 @@
-#!/home/christian/radioaktiv/technik/scripts/silent-check/env/bin/python
-
 import argparse
 
 parser = argparse.ArgumentParser(description='Receive information from liquidsoap scripts')
