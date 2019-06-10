@@ -1,6 +1,0 @@
-# HELP liquidsoap_script_version_info currently running version of liquidsoap exporter scripts
-# TYPE liquidsoap_script_version_info gauge
-liquidsoap_script_version_info{version="0.1"} 1.0
-# HELP liquidsoap_stream_noise Result of liquidsoap stream blank detection
-# TYPE liquidsoap_stream_noise gauge
-liquidsoap_stream_noise{max_blank="20.0",min_noise="0.0",source="foobar",threshold="-40.0"} 1.0
