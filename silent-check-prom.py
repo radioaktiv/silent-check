@@ -1,3 +1,6 @@
+#!{{ sc__venv }}/bin/python
+# {{ ansible_managed }}
+
 import argparse
 
 parser = argparse.ArgumentParser(description='Receive information from liquidsoap scripts')
@@ -45,6 +48,17 @@ args = parser.parse_args()
 
 print(args)
 
+import srvlookup
+
+rr = srvlookup.lookup('pushgateway', domain='consul')
+
+if len(rr) == 0:
+    raise RuntimeError('no pushgateway found')
+
+rr = rr[0]
+
+addr = '%s:%s' % (rr.host, rr.port)
+
 from prometheus_client import Gauge, CollectorRegistry, push_to_gateway
 
 registry = CollectorRegistry()
@@ -62,4 +76,4 @@ g = Gauge(
         )
 g.labels(source=args.source, min_noise=args.min_noise, max_blank=args.max_blank, threshold=args.threshold).set(args.noise)
 
-push_to_gateway('localhost:9091', job='silent_checker', grouping_key={'source': args.source}, registry=registry)
+push_to_gateway(addr, job='silent_checker', grouping_key={'source': args.source}, registry=registry)
