@@ -3,6 +3,17 @@ set("log.file", false)
 set("log.stdout", true)
 set("log.level",3)
 
+{% if server | d(False) %}
+set("server.socket", true)
+set("server.telnet",false)
+
+set("server.socket.path", "{{ socket_path }}")
+set("server.socket.permissions", {{ socket_perms | d(0600) }})
+{% else %}
+set("server.socket", false)
+set("server.telnet", false)
+{% endif %}
+
 {% set min_noise_default = 0.0 %}
 {% set max_blank_default = 20.0 %}
 {% set threshold_default = -40.0 %}
