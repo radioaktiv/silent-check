@@ -9,6 +9,7 @@ set("server.telnet",false)
 
 set("server.socket.path", "{{ socket_path }}")
 set("server.socket.permissions", {{ socket_perms | d(0600) }})
+set("server.timeout", -1.0)
 {% else %}
 set("server.socket", false)
 set("server.telnet", false)
