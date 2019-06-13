@@ -19,17 +19,6 @@ set("server.telnet", false)
 {% set threshold_default = -40.0 %}
 
 {% for source in sources %}
-{{ source.name }} = audio_to_stereo(
-    server.rms(
-        id='{{ source.name }}_rms',
-        mksafe(
-            input.http(
-            id='{{ source.name }}_http',
-            '{{ source.url }}'
-            )
-        )
-    )
-)
 
 def noise_{{ source.name }}()
   system('{{ silent_check_prom }} --noise --source {{ source.name }} --min_noise {{ source.min_noise | d(min_noise_default) }} --max_blank {{ source.max_blank | d(max_blank_default) }} --threshold {{ source.threshold | d(threshold_default) }}')
@@ -43,13 +32,23 @@ noise_{{ source.name }}()
 output.dummy(
     id='{{ source.name }}_dummy_out',
     on_blank(
-      max_blank={{ source.max_blank | d(max_blank_default) }},
-      min_noise={{ source.min_noise | d(min_noise_default) }},
-      threshold={{ source.threshold | d(threshold_default) }},
-      track_sensitive=false,
-      on_noise=noise_{{ source.name }},
-      blank_{{ source.name }},
-      {{ source.name }}
+        max_blank={{ source.max_blank | d(max_blank_default) }},
+        min_noise={{ source.min_noise | d(min_noise_default) }},
+        threshold={{ source.threshold | d(threshold_default) }},
+        track_sensitive=false,
+        on_noise=noise_{{ source.name }},
+        blank_{{ source.name }},
+        server.rms(
+            id='{{ source.name }}_rms',
+            audio_to_stereo(
+                mksafe(
+                    input.http(
+                        id='{{ source.name }}_http',
+                        '{{ source.url }}'
+                    )
+                )
+            )
+        )
     )
 )
 
