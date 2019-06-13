@@ -156,7 +156,7 @@ class Application:
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, self._bind_addr, self._bind_port)
-        asyncio.create_task(site.start())
+        self._loop.create_task(site.start())
 
         await cleanup_event.wait()
 
