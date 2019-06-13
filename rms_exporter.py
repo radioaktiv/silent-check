@@ -1,6 +1,3 @@
-#!/home/christian/radioaktiv/technik/scripts/silent-check/env/bin/python
-# {{ ansible_managed }}
-
 import argparse
 import asyncio
 import datetime
