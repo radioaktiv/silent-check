@@ -1,6 +1,7 @@
 #!/home/christian/radioaktiv/technik/scripts/silent-check/env/bin/python
 # {{ ansible_managed }}
 
+import argparse
 import asyncio
 import datetime
 import logging
@@ -13,7 +14,46 @@ from prometheus_client import REGISTRY, CONTENT_TYPE_LATEST, generate_latest
 
 logging.basicConfig(format='%(asctime)s : %(levelname)8s : %(name)30s : %(funcName)-20s : %(lineno)4d : %(message)s')
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
+parser = argparse.ArgumentParser(description='Export information from liquidsoap script')
+parser.add_argument(
+    '--verbose',
+    '-v',
+    action='count',
+    help='Verbosity of the log messages. Specify multiple times to increase log level.',
+    default=0
+)
+parser.add_argument(
+    '--socket-path',
+    required=True,
+    help='The path to the liquidsoap socket',
+    type=str
+)
+parser.add_argument(
+    '--web.addr',
+    default='localhost',
+    help='Address to listen on.',
+    type=str,
+    metavar='127.0.0.1'
+)
+parser.add_argument(
+    '--web.port',
+    default=8080,
+    help='Port to listen on.',
+    type=int,
+    metavar=12345
+)
+parser.add_argument(
+    '--web.telemetry-path',
+    default='/metrics',
+    metavar='/metrics',
+    help='Path under which to expose metrics.'
+)
+
+args = vars(parser.parse_args())
+
+levels = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
+logger.setLevel(levels[min(args['verbose'], len(levels) - 1)])
 
 
 class Liquidsoap:
@@ -132,7 +172,7 @@ class Application:
             val = float(res)
             self.rms_gauge.labels(source=source).set(val)
 
-    async def metrics_endpoint(self, req):
+    async def metrics_endpoint(self, req: web.Request):
         await self.collect_rms_values()
 
         rsp = web.Response(body=generate_latest(REGISTRY))
@@ -189,8 +229,13 @@ async def open_liquidsoap_connection(socket_path: str, loop: asyncio.AbstractEve
 
 runner = AsyncioRunner()
 
-liquidsoap = runner.loop.run_until_complete(open_liquidsoap_connection('./silent-check.sock', loop=runner.loop))
-app = Application(liquidsoap, 'localhost', 8080, loop=runner.loop)
+liquidsoap = runner.loop.run_until_complete(open_liquidsoap_connection(args['socket_path'], loop=runner.loop))
+app = Application(
+    liquidsoap,
+    bind_addr=args['web.addr'],
+    bind_port=args['web.port'],
+    metrics_path=args['web.telemetry_path'],
+    loop=runner.loop)
 
 runner.start_cleanup_event_task(app.run)
 runner.run_loop()
