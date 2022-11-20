@@ -7,6 +7,10 @@ settings.log.level.set(3)
 
 common_labels = ["station", "variant"]
 
+metric_latency = prometheus.latency(
+  labels=common_labels
+)
+
 metric_ready = prometheus.gauge(
   help="Source ready",
   labels=common_labels,
@@ -52,6 +56,8 @@ def monitor_stream(~station, ~variant, s)
   set_lufs_momentary = metric_lufs_momentary(label_values=label_values)
 
   is_ready = s.is_ready
+
+  metric_latency(label_values=label_values, s)
 
   s = blank.detect(
     id="blank_" ^ station ^ "_" ^ variant,
