@@ -1,1 +1,1 @@
-Checks for silent and send results to pushgateway
+Checks and exports information of audio stream regarding loudness and silence
