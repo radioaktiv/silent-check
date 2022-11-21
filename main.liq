@@ -17,10 +17,10 @@ metric_ready = prometheus.gauge(
   "radio_source_ready"
 )
 
-metric_silence = prometheus.gauge(
-  help="Siilence detected on specific source",
+metric_noise = prometheus.gauge(
+  help="Noise detected on specific source",
   labels=common_labels,
-  "radio_audio_silence"
+  "radio_noise"
 )
 
 metric_rms = prometheus.gauge(
@@ -48,7 +48,7 @@ metric_lufs_momentary = prometheus.gauge(
 def monitor_stream(~station, ~variant, s)
   label_values = [station, variant]
   set_ready = metric_ready(label_values=label_values)
-  set_silence = metric_silence(label_values=label_values)
+  set_noise = metric_noise(label_values=label_values)
   set_rms = metric_rms(label_values=label_values)
   set_rms_l = metric_rms_stereo(label_values=list.append(label_values, ["left"]))
   set_rms_r = metric_rms_stereo(label_values=list.append(label_values, ["right"]))
@@ -60,11 +60,11 @@ def monitor_stream(~station, ~variant, s)
   metric_latency(label_values=label_values, s)
 
   s = blank.detect(
-    id="blank_" ^ station ^ "_" ^ variant,
-    on_noise={set_silence(0.)},
-    start_blank=false,
+    id="blank_detect_" ^ station ^ "_" ^ variant,
+    on_noise={set_noise(1.)},
+    start_blank=true,
     track_sensitive=false,
-    {set_silence(1.)},
+    {set_noise(0.)},
     s
   )
 
@@ -121,26 +121,19 @@ def monitor_http(~station, ~variant, ~url)
   monitor_stream(station=station, variant=variant, s)
 end
 
-monitor_http(
-  station="radioaktiv",
-  variant="VeryHiFi",
-  url="https://stream.radioaktiv.org/VeryHiFi"
-)
+let json.parse (
+  configs : [{
+    station : string,
+    variant : string,
+    url : string
+  }]
+) = file.contents("config.json")
 
-monitor_http(
-  station="bermudafunk",
-  variant="ogg",
-  url="http://streaming.fueralle.org:8000/bermudafunk.ogg"
-)
-
-monitor_http(
-  station="bermudafunk",
-  variant="mp3_high",
-  url="http://streaming.fueralle.org:8000/bermudafunk_high"
-)
-
-monitor_http(
-  station="bermudafunk",
-  variant="mp3_low",
-  url="http://streaming.fueralle.org:8000/bermudafunk_low"
+list.iter(
+  fun(config) -> monitor_http(
+    station=config.station,
+    variant=config.variant,
+    url    =config.url,
+  ),
+  configs
 )
